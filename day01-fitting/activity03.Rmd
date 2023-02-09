@@ -3,6 +3,144 @@ title: "Activity 2 - Day 1"
 output: github_document
 ---
 
-```{setup, include=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Loading Packages
+```{r, warning= FALSE}
+library(tidyverse)
+library(tidymodels)
+```
+
+
+# Loading GGally 
+```{r}
+library(GGally)
+```
+
+# Loading the dataset from the URL
+```{r}
+hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+
+hfi
+```
+# Task 4 Pairwise Relations
+```{r, warning=FALSE}
+hfi %>% 
+  select(ends_with("_score")) %>% 
+  ggpairs()
+```
+# Task 5 The multiple linear regression model
+
+```{r}
+m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi)
+tidy(m_hr_ef)
+```
+
+The equation which I can represent from the above values is $y = -1.464e-11 + 2.00e+00 * hf_score + (-1.0000e+00) * ef_score$
+
+# Challenges 3-D Plots
+
+To design the 3D scatter plot installing required library
+
+```{r}
+library(scatterplot3d)
+```
+
+```{r}
+s3d <- scatterplot3d(hfi$hf_score, hfi$ef_score, box= FALSE, color = "steelblue")
+```
+
+# Filter year to 2006 and creating a new dataset
+```{r}
+hfi_2016 <- hfi %>% filter(year == 2016)
+
+hfi_2016
+```
+
+# Fitting the overall model
+
+```{r}
+# review any visual patterns
+hfi %>% 
+  select(pf_score, pf_expression_influence, pf_expression_control) %>% 
+  ggpairs()
+
+#fit the mlr model
+m_pf <- lm(pf_score ~ pf_expression_influence + pf_expression_control, data = hfi)
+tidy(m_pf)
+```
+# Fitting the overall model with "hfi_2016"
+
+```{r}
+# review any visual patterns
+hfi_2016 %>% 
+  select(pf_score, pf_expression_influence, pf_expression_control) %>% 
+  ggpairs()
+
+#fit the mlr model
+m_pf_2016 <- lm(pf_score ~ pf_expression_influence + pf_expression_control, data = hfi_2016)
+tidy(m_pf_2016)
+```
+# Is there a relationship between the response and predictors?
+
+```{r}
+summary(m_pf)
+```
+# Is there a relationship between the response and predictors? for 2016
+
+```{r}
+summary(m_pf_2016)
+```
+
+```{r}
+#obtain fitted values and residuals for 2016
+m_pf_aug_2016 <- augment(m_pf_2016)
+
+# plot fitted values and residuals
+ggplot(data = m_pf_aug_2016, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
+```{r}
+# obtain fitted values and residuals
+m_pf_aug <- augment(m_pf)
+
+# plot fitted values and residuals
+ggplot(data = m_pf_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
+
+In my opinion, i could say that there is no linearity pattern witnessed from the above plot. Eventually, I can say that __high linearity__ between those two variables.
+
+
+
+```{r}
+ggplot(data = m_pf_aug_2016, aes(x = .resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residuals")
+```
+
+```{r}
+ggplot(data = m_pf_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residuals")
+```
+
+```{r}
+s3d <- scatterplot3d(hfi_2016$hf_score, hfi_2016$ef_score, box= FALSE, color = "red", grid= FALSE,
+                     type = "h")
+model <- lm(hfi_2016$pf_score ~ hfi_2016$pf_expression_influence + hfi_2016$pf_expression_control)
+s3d$plane3d(model)
+s3d$points3d(seq(10, 20, 2), seq(85, 60, -5), seq(60, 10, -10),
+col = "red", type = "h", pch = 8)
+```
+
